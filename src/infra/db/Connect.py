@@ -1,5 +1,6 @@
 import psycopg2
 import os
+from psycopg2.pool import ThreadedConnectionPool
 
 from dotenv import load_dotenv
 
@@ -19,7 +20,8 @@ class PostgresDatabase:
 
     def connect(self):
         try:
-            self.conn = psycopg2.connect(**self.config)
+            self.pool = ThreadedConnectionPool(1, 2, **self.config)
+            self.conn = self.pool.getconn()
             self.cursor = self.conn.cursor()
             print("Conectado ao banco de dados PostgreSQL com sucesso!")
         except Exception as e:
@@ -29,7 +31,7 @@ class PostgresDatabase:
         if self.cursor:
             self.cursor.close()
         if self.conn:
-            self.conn.close()
+            self.pool.putconn(self.conn)
             print("Conexão ao banco de dados fechada.")
 
 def get_db():
