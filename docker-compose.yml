@@ -47,7 +47,7 @@ services:
           cpus: '0.25'
           memory: '0.5GB'
 
-  db: # Banco de dados
+  postgres: # Banco de dados
     image: postgres
     environment:
       POSTGRES_USER: ${POSTGRES_USER}
@@ -55,6 +55,8 @@ services:
       POSTGRES_DB: ${POSTGRES_DB}
     volumes:
       - ./sql:/docker-entrypoint-initdb.d/
+    ports:
+      - "5432:5432"
     deploy:
       resources:
         limits:

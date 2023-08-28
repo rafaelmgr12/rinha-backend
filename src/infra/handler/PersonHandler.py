@@ -3,10 +3,11 @@ from pydantic import ValidationError
 from fastapi import HTTPException
 
 from src.domain.entity.Person import Person
+from src.infra.repository.PersonRepository import PersonRepository
 
 class PessoaHandler:
 
-    def __init__(self, person_repo):
+    def __init__(self, person_repo: PersonRepository):
         self.person_repo = person_repo
 
     def create(self, pessoa_dto):
