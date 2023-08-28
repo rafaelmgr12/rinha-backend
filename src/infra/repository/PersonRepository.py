@@ -37,14 +37,13 @@ class PersonRepository:
             if result:
                 await self.db_pool.release_conn(conn)
                 return Person(result['apelido'], result['nome'], result['nascimento'], result['stack'])
-
+        await self.db_pool.release_conn(conn)
         return None
 
     async def search_person_by_term(self, term: str):
         async with self.db_pool as conn:
             results = await conn.fetch("SELECT id, apelido, nome, nascimento, stack FROM pessoas WHERE apelido ILIKE $1 OR nome ILIKE $2 OR $3 = ANY(stack)", f"%{term}%", f"%{term}%", term)
-            await self.db_pool.release_conn(conn)
-
+            await self.db_pool.release_conn(conn)   
             return [Person(result['apelido'], result['nome'], result['nascimento'], result['stack']) for result in results]
 
     async def count_persons(self):
