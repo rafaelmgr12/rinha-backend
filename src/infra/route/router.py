@@ -19,16 +19,16 @@ def get_handler(repo: PersonRepository = Depends(get_repository)):
 
 @router.post("/pessoas")
 async def create_pessoa(pessoa_dto: PessoaDto, handler: PessoaHandler = Depends(get_handler)):
-    return handler.create(pessoa_dto)
+    return await handler.create(pessoa_dto)
 
 @router.get("/pessoas/{person_id}")
-async def get_pessoa(person_id: uuid.UUID, handler: PessoaHandler = Depends(get_handler)):
-    return handler.retrieve(person_id)
+async def get_pessoa(person_id: str, handler: PessoaHandler = Depends(get_handler)):
+    return await handler.retrieve(uuid.UUID(person_id))
 
 @router.get("/pessoas")
 async def search_pessoa(term: str, handler: PessoaHandler = Depends(get_handler)):
-    return handler.search(term)
+    return await handler.search(term)
 
 @router.get("/contagem-pessoas")
 async def count_pessoas(handler: PessoaHandler = Depends(get_handler)):
-    return handler.count()
+    return await handler.count()

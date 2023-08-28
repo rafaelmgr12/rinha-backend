@@ -1,50 +1,47 @@
+import asyncpg
 import uuid
-import psycopg2
-
 from src.domain.entity.Person import Person
+from datetime import datetime
+from fastapi import HTTPException
 
 class PersonRepository:
 
     def __init__(self, db_connection):
-        self.db = db_connection    
-        self.db.cursor.execute("PREPARE person_insert AS INSERT INTO pessoas (id, apelido, nome, nascimento, stack) VALUES ($1, $2, $3, $4, $5)")
+        self.db = db_connection
+        self.insert_person_stmt = None
 
 
-    def get_person_by_apelido(self, apelido: str):
-        self.db.cursor.execute("SELECT id, apelido, nome, nascimento, stack FROM pessoas WHERE apelido = %s", (apelido,))
-        result = self.db.cursor.fetchone()
-        if result:
-            return Person(result[1], result[2], result[3], result[4])
-        return None
-
-    def add_person(self, person: Person):
-        try:
-            self.db.cursor.execute("EXECUTE person_insert (%s, %s, %s, %s, %s)", (str(person.id), person.apelido, person.nome, person.nascimento, person.stack))
-            self.db.conn.commit()
-        except psycopg2.errors.UniqueViolation:
-            self.db.conn.rollback()
-            
-        return None
-
-    def get_person_by_id(self, person_id: uuid.UUID):
-        self.db.cursor.execute("SELECT id, apelido, nome, nascimento, stack FROM pessoas WHERE id = %s", (person_id,))
-        result = self.db.cursor.fetchone()
-        if result:
-            return Person(result[1], result[2], result[3], result[4])
-        return None
-
-    def search_person_by_term(self, term: str):
-        named_cursor = self.db.conn.cursor('named_cursor')
-        named_cursor.execute(
-            "SELECT id, apelido, nome, nascimento, stack FROM pessoas WHERE apelido ILIKE %s OR nome ILIKE %s OR %s = ANY(stack)",
-            (f"%{term}%", f"%{term}%", term)
+    async def prepare_statements(self):
+        self.insert_person_stmt = await self.db.conn.prepare(
+            "INSERT INTO pessoas (id, apelido, nome, nascimento, stack) VALUES ($1, $2, $3, $4, $5)"
         )
-        results = named_cursor.fetchall()
-        persons = [Person(result[1], result[2], result[3], result[4]) for result in results]
-        return persons
 
+    async def get_person_by_apelido(self, apelido: str):
+        result = await self.db.conn.fetchrow("SELECT id, apelido, nome, nascimento, stack FROM pessoas WHERE apelido = $1", apelido)
+        if result:
+            return Person(result['apelido'], result['nome'], result['nascimento'], result['stack'])
+        return None
 
+    async def add_person(self, person: Person):
+        try:
+            if not self.insert_person_stmt:
+                await self.prepare_statements()
+            nascimento_date = datetime.strptime(person.nascimento, '%Y-%m-%d').date()
 
-    def count_persons(self):
-        self.db.cursor.execute("SELECT COUNT(*) FROM pessoas")
-        return self.db.cursor.fetchone()[0]
+            await self.insert_person_stmt.fetch(str(person.id), person.apelido, person.nome, nascimento_date, person.stack)
+        except asyncpg.UniqueViolationError:
+            raise HTTPException(status_code=400, detail="Person already exists")
+        return None
+
+    async def get_person_by_id(self, person_id: uuid.UUID):
+        result = await self.db.conn.fetchrow("SELECT id, apelido, nome, nascimento, stack FROM pessoas WHERE id = $1", person_id)
+        if result:
+            return Person(result['apelido'], result['nome'], result['nascimento'], result['stack'])
+        return None
+
+    async def search_person_by_term(self, term: str):
+        results = await self.db.conn.fetch("SELECT id, apelido, nome, nascimento, stack FROM pessoas WHERE apelido ILIKE $1 OR nome ILIKE $2 OR $3 = ANY(stack)", f"%{term}%", f"%{term}%", term)
+        return [Person(result['apelido'], result['nome'], result['nascimento'], result['stack']) for result in results]
+
+    async def count_persons(self):
+        return await self.db.conn.fetchval("SELECT COUNT(*) FROM pessoas")

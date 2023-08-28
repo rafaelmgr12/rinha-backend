@@ -1,7 +1,5 @@
-import psycopg2
+import asyncpg
 import os
-from psycopg2.pool import ThreadedConnectionPool
-
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -11,33 +9,29 @@ class PostgresDatabase:
         self.config = {
             "host": os.getenv("POSTGRES_HOST"),
             "port": os.getenv("POSTGRES_PORT"),
-            "dbname": os.getenv("POSTGRES_DB"),
+            "database": os.getenv("POSTGRES_DB"),  # Note: asyncpg uses "database" instead of "dbname"
             "user": os.getenv("POSTGRES_USER"),
-            "password": os.getenv("POSTGRES_PASSWORD")
+            "password": os.getenv("POSTGRES_PASSWORD"),
+            "timeout": 5  # asyncpg uses "timeout" instead of "connect_timeout"
         }
         self.conn = None
-        self.cursor = None
 
-    def connect(self):
+    async def connect(self):
         try:
-            self.pool = ThreadedConnectionPool(1, 10, **self.config)
-            self.conn = self.pool.getconn()
-            self.cursor = self.conn.cursor()
-            print("Conectado ao banco de dados PostgreSQL com sucesso!")
+            self.conn = await asyncpg.connect(**self.config)
+            print("Connected to the PostgreSQL database successfully!")
         except Exception as e:
-            print(f"Erro ao conectar ao banco de dados: {e}")
+            print(f"Error connecting to the database: {e}")
 
-    def close(self):
-        if self.cursor:
-            self.cursor.close()
+    async def close(self):
         if self.conn:
-            self.pool.putconn(self.conn)
-            print("Conexão ao banco de dados fechada.")
+            await self.conn.close()
+            print("Database connection closed.")
 
-def get_db():
+async def get_db():
     db = PostgresDatabase()
-    db.connect()
+    await db.connect()
     try:
         yield db
     finally:
-        db.close()
+        await db.close()
