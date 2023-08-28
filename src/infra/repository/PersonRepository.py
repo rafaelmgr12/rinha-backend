@@ -7,6 +7,7 @@ class PersonRepository:
 
     def __init__(self, db_connection):
         self.db = db_connection
+        self.db.connect()
 
     def add_person(self, person: Person):
         try:
