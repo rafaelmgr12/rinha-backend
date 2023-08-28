@@ -6,26 +6,34 @@ from dotenv import load_dotenv
 load_dotenv()
 
 class PostgresDatabase:
-    def __init__(self):
-        self.config = {
-            "host": os.getenv("POSTGRES_HOST"),
-            "port": os.getenv("POSTGRES_PORT"),
-            "database": os.getenv("POSTGRES_DB"),
-            "user": os.getenv("POSTGRES_USER"),
-            "password": os.getenv("POSTGRES_PASSWORD"),
-            "min_size": 5,  # Minimum number of connections in the pool
-            "max_size": 20,  # Maximum number of connections in the pool
-            "timeout": 10  # Connection timeout
-        }
-        self.pool = None
+    _instance = None
+
+    def __new__(cls):
+        if cls._instance is None:
+            cls._instance = super(PostgresDatabase, cls).__new__(cls)
+            cls._instance.pool = None
+            cls._instance.config = {
+                "host": os.getenv("POSTGRES_HOST"),
+                "port": os.getenv("POSTGRES_PORT"),
+                "database": os.getenv("POSTGRES_DB"),
+                "user": os.getenv("POSTGRES_USER"),
+                "password": os.getenv("POSTGRES_PASSWORD"),
+                "min_size": 5,
+                "max_size": 20,
+                "timeout": 10
+            }
+        return cls._instance
 
     async def connect(self):
-        self.pool = await asyncpg.create_pool(**self.config)
-        print("Connection pool created successfully!")
+        if self.pool is None:
+            self.pool = await asyncpg.create_pool(**self.config)
+            print("Connection pool created successfully!")
 
     async def close(self):
-        await self.pool.close()
-        print("Connection pool closed.")
+        if self.pool:
+            await self.pool.close()
+            print("Connection pool closed.")
+            self.pool = None
 
     async def get_conn(self):
         return await self.pool.acquire()
@@ -56,4 +64,4 @@ async def get_db():
     try:
         yield db
     finally:
-        await db.close()
+        pass
