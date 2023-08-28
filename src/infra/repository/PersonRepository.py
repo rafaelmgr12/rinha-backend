@@ -12,7 +12,7 @@ class PersonRepository:
         try:
             self.db.cursor.execute(
                 "INSERT INTO pessoas (id, apelido, nome, nascimento, stack) VALUES (%s, %s, %s, %s, %s)", 
-                (person.id, person.apelido, person.nome, person.nascimento, person.stack)
+                (str(person.id), person.apelido, person.nome, person.nascimento, person.stack)
             )
             self.db.conn.commit()
         except psycopg2.errors.UniqueViolation:

@@ -7,7 +7,7 @@ services:
     image: api
     hostname: api1
     depends_on:
-      - db
+      - postgres
     expose:
       - "80"
     deploy:
@@ -23,7 +23,7 @@ services:
     image: api
     hostname: api2
     depends_on:
-      - db
+      - postgres
     expose:
       - "80"
     deploy:

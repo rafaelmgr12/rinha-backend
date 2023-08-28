@@ -25,10 +25,10 @@ async def create_pessoa(pessoa_dto: PessoaDto, handler: PessoaHandler = Depends(
 async def get_pessoa(person_id: uuid.UUID, handler: PessoaHandler = Depends(get_handler)):
     return handler.retrieve(person_id)
 
-@router.get("/pessoas/")
+@router.get("/pessoas")
 async def search_pessoa(term: str, handler: PessoaHandler = Depends(get_handler)):
     return handler.search(term)
 
-@router.get("/contagem-pessoas/")
+@router.get("/contagem-pessoas")
 async def count_pessoas(handler: PessoaHandler = Depends(get_handler)):
     return handler.count()
