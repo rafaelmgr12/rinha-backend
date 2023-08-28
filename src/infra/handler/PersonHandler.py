@@ -13,6 +13,9 @@ class PessoaHandler:
     def create(self, pessoa_dto):
         try:
             person = Person(pessoa_dto.apelido, pessoa_dto.nome, pessoa_dto.nascimento, pessoa_dto.stack)
+            apelido = self.person_repo.get_person_by_apelido(person.apelido)
+            if apelido:
+                raise HTTPException(status_code=400, detail="Apelido already exists")
             self.person_repo.add_person(person)
             return {"id": person.id}
         except ValidationError:

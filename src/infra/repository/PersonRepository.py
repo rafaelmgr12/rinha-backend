@@ -8,6 +8,13 @@ class PersonRepository:
     def __init__(self, db_connection):
         self.db = db_connection
 
+    def get_person_by_apelido(self, apelido: str):
+        self.db.cursor.execute("SELECT id, apelido, nome, nascimento, stack FROM pessoas WHERE apelido = %s", (apelido,))
+        result = self.db.cursor.fetchone()
+        if result:
+            return Person(result[1], result[2], result[3], result[4])
+        return None
+
     def add_person(self, person: Person):
         try:
             self.db.cursor.execute(
