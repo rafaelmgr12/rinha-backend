@@ -20,7 +20,7 @@ class PostgresDatabase:
 
     def connect(self):
         try:
-            self.pool = ThreadedConnectionPool(1, 2, **self.config)
+            self.pool = ThreadedConnectionPool(1, 10, **self.config)
             self.conn = self.pool.getconn()
             self.cursor = self.conn.cursor()
             print("Conectado ao banco de dados PostgreSQL com sucesso!")
