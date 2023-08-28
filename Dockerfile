@@ -21,8 +21,7 @@ COPY ./src /app/src
 COPY main.py /app/
 
 
-# Make port 8000 available to the world outside this container
-EXPOSE 8000
+EXPOSE 80
 
 # Run app when the container launches
-CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
+CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "80"]
