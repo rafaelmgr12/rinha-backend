@@ -1,6 +1,7 @@
 import uuid
 from fastapi import APIRouter, Depends
 from src.domain.dto.PersonDto import PessoaDto
+from src.infra.db.Connect import get_db,PostgresDatabase
 
 from src.infra.handler.PersonHandler import PessoaHandler
 from src.infra.repository.PersonRepository import PersonRepository
@@ -8,8 +9,13 @@ from src.infra.repository.PersonRepository import PersonRepository
 
 router = APIRouter()
 
-def get_handler(person_repo=Depends(PersonRepository)):
-    return PessoaHandler(person_repo)
+def get_repository(db: PostgresDatabase = Depends(get_db)):
+    return PersonRepository(db)
+
+
+def get_handler(repo: PersonRepository = Depends(get_repository)):
+    return PessoaHandler(repo)
+
 
 @router.post("/pessoas")
 async def create_pessoa(pessoa_dto: PessoaDto, handler: PessoaHandler = Depends(get_handler)):

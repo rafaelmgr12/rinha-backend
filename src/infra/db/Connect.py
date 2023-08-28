@@ -31,3 +31,11 @@ class PostgresDatabase:
         if self.conn:
             self.conn.close()
             print("Conexão ao banco de dados fechada.")
+
+def get_db():
+    db = PostgresDatabase()
+    db.connect()
+    try:
+        yield db
+    finally:
+        db.close()
