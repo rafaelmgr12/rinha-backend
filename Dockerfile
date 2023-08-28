@@ -18,10 +18,11 @@ RUN apt-get update && apt-get -y install libpq-dev gcc \
 
 # Copy the rest of the working directory contents into the container
 COPY ./src /app/src
+COPY main.py /app/
 
 
 # Make port 8000 available to the world outside this container
 EXPOSE 8000
 
 # Run app when the container launches
-CMD ["uvicorn", "src.api.main:app", "--host", "0.0.0.0", "--port", "8000"]
+CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
