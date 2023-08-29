@@ -11,9 +11,8 @@ class PessoaHandler:
 
     async def create(self, pessoa_dto):
         try:
-            person = Person(pessoa_dto.apelido, pessoa_dto.nome, pessoa_dto.nascimento, pessoa_dto.stack)
-            if not PessoaHandler.__is_valid_date(person.nascimento):
-                raise HTTPException(status_code=400, detail="Invalid date format")
+            nascimento_date = datetime.strptime(pessoa_dto.nascimento, '%Y-%m-%d').date()
+            person = Person(pessoa_dto.apelido, pessoa_dto.nome, nascimento_date, pessoa_dto.stack)
             apelido = await self.person_repo.get_person_by_apelido(person.apelido)
             if apelido:
                 raise HTTPException(status_code=400, detail="Apelido already exists")
@@ -41,10 +40,4 @@ class PessoaHandler:
     async def count(self):
         return {"count": await self.person_repo.count_persons()}
     
-    @staticmethod
-    def __is_valid_date(date_str):
-        try:
-            datetime.strptime(date_str, '%Y-%m-%d')
-            return True
-        except ValueError:
-            return False
+

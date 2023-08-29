@@ -1,3 +1,4 @@
+from datetime import datetime
 import uuid
 
 from typing import Optional,List
@@ -8,7 +9,7 @@ class Person:
     __id_: uuid
     __apelido: str
     __nome: str
-    __nascimento: str
+    __nascimento: datetime
     __stack:  Optional[List[str]]
 
     def __init__(self, apelido: str, nome: str, nascimento: str, stack: Optional[List[str]]):
