@@ -40,4 +40,4 @@ class PersonRepository:
 
     async def count_persons(self):
         async with self.db_pool.pool.acquire() as conn:
-            return await conn.fetchval("SELECT COUNT(*) FROM pessoas")
+            return await conn.fetchval("SELECT COUNT(id) FROM pessoas")
