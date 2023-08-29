@@ -55,10 +55,17 @@ services:
       POSTGRES_DB: ${POSTGRES_DB}
     volumes:
       - ./sql:/docker-entrypoint-initdb.d/
+      - ./configs/custom_postgresql.conf:/etc/postgresql/postgresql.conf
+      - pgdata:/var/lib/postgresql/data
     ports:
       - "5432:5432"
+    command: -c 'config_file=/etc/postgresql/postgresql.conf'
     deploy:
       resources:
         limits:
           cpus: '0.75'
           memory: '1.5GB'
+
+
+volumes:
+  pgdata:
