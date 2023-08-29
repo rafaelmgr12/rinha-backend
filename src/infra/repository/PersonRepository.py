@@ -10,14 +10,14 @@ class PersonRepository:
         self.db_pool = db_pool
 
     async def get_person_by_apelido(self, apelido: str):
-        async with self.db_pool as conn:
+        async with self.db_pool.pool.acquire() as conn:
             result = await conn.fetchrow("SELECT id, apelido, nome, nascimento, stack FROM pessoas WHERE apelido = $1", apelido)
             if result:
                 return Person(result['apelido'], result['nome'], result['nascimento'], result['stack'])
         return None
 
     async def add_person(self, person: Person):
-        async with self.db_pool as conn:
+        async with self.db_pool.pool.acquire() as conn:
             nascimento_date = datetime.strptime(person.nascimento, '%Y-%m-%d').date()
             try:
                 await conn.execute(
@@ -26,29 +26,19 @@ class PersonRepository:
                 )
             except asyncpg.UniqueViolationError:
                 raise HTTPException(status_code=400, detail="Person already exists")
-            finally:
-                await self.db_pool.release_conn(conn)
-        return None
-
 
     async def get_person_by_id(self, person_id: uuid.UUID):
-        async with self.db_pool as conn:
+        async with self.db_pool.pool.acquire() as conn:
             result = await conn.fetchrow("SELECT id, apelido, nome, nascimento, stack FROM pessoas WHERE id = $1", person_id)
             if result:
-                await self.db_pool.release_conn(conn)
                 return Person(result['apelido'], result['nome'], result['nascimento'], result['stack'])
-        await self.db_pool.release_conn(conn)
         return None
 
     async def search_person_by_term(self, term: str):
-        async with self.db_pool as conn:
+        async with self.db_pool.pool.acquire() as conn:
             results = await conn.fetch("SELECT id, apelido, nome, nascimento, stack FROM pessoas WHERE apelido ILIKE $1 OR nome ILIKE $2 OR $3 = ANY(stack)", f"%{term}%", f"%{term}%", term)
-            await self.db_pool.release_conn(conn)   
             return [Person(result['apelido'], result['nome'], result['nascimento'], result['stack']) for result in results]
 
     async def count_persons(self):
-        async with self.db_pool as conn:
-            result = await conn.fetchval("SELECT COUNT(*) FROM pessoas")
-            await self.db_pool.release_conn(conn)
-
-            return result 
+        async with self.db_pool.pool.acquire() as conn:
+            return await conn.fetchval("SELECT COUNT(*) FROM pessoas")
