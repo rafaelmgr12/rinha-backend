@@ -18,7 +18,7 @@ class PessoaHandler:
                 raise HTTPException(status_code=400, detail="Apelido already exists")
             await self.person_repo.add_person(person)
             return {"id": person.id}
-        except ValidationError:
+        except (ValidationError,ValueError):
             raise HTTPException(status_code=400, detail="Data validation error")
 
     async def retrieve(self, person_id):
