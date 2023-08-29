@@ -26,8 +26,8 @@ async def create_pessoa(response:Response ,pessoa_dto: PessoaDto, handler: Pesso
 async def get_pessoa(person_id: str, handler: PessoaHandler = Depends(get_handler)):
     return await handler.retrieve(uuid.UUID(person_id))
 
-@router.get("/pessoas", )
-async def search_pessoa(term: str, handler: PessoaHandler = Depends(get_handler)):
+@router.get("/pessoas")
+async def search_pessoa(term: str=None, handler: PessoaHandler = Depends(get_handler)):
     if term is None:
         raise HTTPException(status_code=400, detail="bad request")
     return await handler.search(term)
